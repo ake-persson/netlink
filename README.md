@@ -1,0 +1,4 @@
+# Credits
+
+- Parse messages based on Go package [net](https://golang.org/src/net/interface_linux.go).
+- Socket connection based on Go package [mdlayher/netlink](https://github.com/mdlayher/netlink).
