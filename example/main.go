@@ -45,6 +45,15 @@ func listen() error {
 }
 
 func main() {
+	ifs, err := netlink.Interfaces()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, i := range ifs {
+		log.Printf("%+v %+v", i, i.Interface)
+	}
+
 	if err := listen(); err != nil {
 		log.Fatal(err)
 	}
