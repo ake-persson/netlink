@@ -91,11 +91,12 @@ const (
 )
 
 type Interface struct {
-	Index  int    `json:"index"`
-	MTU    int    `json:"mtu"`
-	Name   string `json:"name"`
-	HwAddr HwAddr `json:"hwAddr"`
-	Flags  Flags  `json:"flags"`
+	Index        int            `json:"index"`
+	MTU          int            `json:"mtu"`
+	Name         string         `json:"name"`
+	HwAddr       HwAddr         `json:"hwAddr"`
+	Flags        Flags          `json:"flags"`
+	NetInterface *net.Interface `json:"-"`
 }
 
 func (f Flags) String() string {
@@ -178,6 +179,26 @@ func parseFlags(flags uint32) Flags {
 	return f
 }
 
+func parseNetFlags(rawFlags uint32) net.Flags {
+	var f net.Flags
+	if rawFlags&IFF_UP != 0 {
+		f |= net.FlagUp
+	}
+	if rawFlags&IFF_BROADCAST != 0 {
+		f |= net.FlagBroadcast
+	}
+	if rawFlags&IFF_LOOPBACK != 0 {
+		f |= net.FlagLoopback
+	}
+	if rawFlags&IFF_POINTOPOINT != 0 {
+		f |= net.FlagPointToPoint
+	}
+	if rawFlags&IFF_MULTICAST != 0 {
+		f |= net.FlagMulticast
+	}
+	return f
+}
+
 func (a HwAddr) String() string {
 	if len(a) == 0 {
 		return ""
@@ -199,8 +220,9 @@ func (a HwAddr) MarshalJSON() ([]byte, error) {
 
 func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *Interface {
 	i := Interface{
-		Index: int(ifim.Index),
-		Flags: parseFlags(ifim.Flags),
+		Index:        int(ifim.Index),
+		Flags:        parseFlags(ifim.Flags),
+		NetInterface: &net.Interface{Index: int(ifim.Index), Flags: parseNetFlags(ifim.Flags)},
 	}
 
 	for _, a := range attrs {
@@ -230,11 +252,14 @@ func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *In
 			}
 			if nonzero {
 				i.HwAddr = a.Value[:]
+				i.NetInterface.HardwareAddr = a.Value[:]
 			}
 		case syscall.IFLA_IFNAME:
 			i.Name = string(a.Value[:len(a.Value)-1])
+			i.NetInterface.Name = i.Name
 		case syscall.IFLA_MTU:
 			i.MTU = int(*(*uint32)(unsafe.Pointer(&a.Value[:4][0])))
+			i.NetInterface.MTU = i.MTU
 		}
 	}
 	return &i
