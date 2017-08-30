@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"syscall"
@@ -38,7 +39,8 @@ func listen() error {
 					return fmt.Errorf("parse netlink route attr: %v", err)
 				}
 				ift := *netlink.ParseNewLink(ifim, attrs)
-				log.Printf("%+v %+v", ift, ift.Interface)
+				j, _ := json.MarshalIndent(ift, "", "  ")
+				fmt.Printf("%s\n", j)
 			}
 		}
 	}
@@ -51,7 +53,8 @@ func main() {
 	}
 
 	for _, i := range ifs {
-		log.Printf("%+v %+v", i, i.Interface)
+		j, _ := json.MarshalIndent(i, "", "  ")
+		fmt.Printf("%s\n", j)
 	}
 
 	if err := listen(); err != nil {

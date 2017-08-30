@@ -1,7 +1,9 @@
 package netlink
 
 import (
+	"encoding/json"
 	"net"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -28,10 +30,10 @@ const (
 	IFF_ECHO        = 0x40000 // echo sent packets
 )
 
-type ExtFlags uint
+type Flags uint
 
 const (
-	FlagUp ExtFlags = 1 << iota
+	FlagUp Flags = 1 << iota
 	FlagBroadcast
 	FlagDebug
 	FlagLoopback
@@ -52,7 +54,7 @@ const (
 	FlagEcho
 )
 
-var extFlagNames = []string{
+var flagNames = []string{
 	"up",
 	"broadcast",
 	"debug",
@@ -74,6 +76,10 @@ var extFlagNames = []string{
 	"echo",
 }
 
+type HwAddr []byte
+
+const hexDigit = "0123456789abcdef"
+
 const (
 	// See linux/if_arp.h.
 	// Note that Linux doesn't support IPv4 over IPv6 tunneling.
@@ -85,48 +91,33 @@ const (
 )
 
 type Interface struct {
-	ExtFlags ExtFlags
-	*net.Interface
+	Index  int    `json:"index"`
+	MTU    int    `json:"mtu"`
+	Name   string `json:"name"`
+	HwAddr HwAddr `json:"hwAddr"`
+	Flags  Flags  `json:"flags"`
 }
 
-func (f ExtFlags) String() string {
-	s := ""
-	for i, name := range extFlagNames {
+func (f Flags) String() string {
+	return strings.Join(f.Slice(), "|")
+}
+
+func (f Flags) Slice() []string {
+	var l []string
+	for i, name := range flagNames {
 		if f&(1<<uint(i)) != 0 {
-			if s != "" {
-				s += "|"
-			}
-			s += name
+			l = append(l, name)
 		}
 	}
-	if s == "" {
-		s = "0"
-	}
-	return s
+	return l
 }
 
-func linkFlags(rawFlags uint32) net.Flags {
-	var f net.Flags
-	if rawFlags&IFF_UP != 0 {
-		f |= net.FlagUp
-	}
-	if rawFlags&IFF_BROADCAST != 0 {
-		f |= net.FlagBroadcast
-	}
-	if rawFlags&IFF_LOOPBACK != 0 {
-		f |= net.FlagLoopback
-	}
-	if rawFlags&IFF_POINTOPOINT != 0 {
-		f |= net.FlagPointToPoint
-	}
-	if rawFlags&IFF_MULTICAST != 0 {
-		f |= net.FlagMulticast
-	}
-	return f
+func (f Flags) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f.Slice())
 }
 
-func linkExtFlags(flags uint32) ExtFlags {
-	var f ExtFlags
+func parseFlags(flags uint32) Flags {
+	var f Flags
 	if flags&IFF_UP != 0 {
 		f |= FlagUp
 	}
@@ -187,10 +178,29 @@ func linkExtFlags(flags uint32) ExtFlags {
 	return f
 }
 
+func (a HwAddr) String() string {
+	if len(a) == 0 {
+		return ""
+	}
+	buf := make([]byte, 0, len(a)*3-1)
+	for i, b := range a {
+		if i > 0 {
+			buf = append(buf, ':')
+		}
+		buf = append(buf, hexDigit[b>>4])
+		buf = append(buf, hexDigit[b&0xF])
+	}
+	return string(buf)
+}
+
+func (a HwAddr) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.String())
+}
+
 func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *Interface {
-	ifi := Interface{
-		ExtFlags:  linkExtFlags(ifim.Flags),
-		Interface: &net.Interface{Index: int(ifim.Index), Flags: linkFlags(ifim.Flags)},
+	i := Interface{
+		Index: int(ifim.Index),
+		Flags: parseFlags(ifim.Flags),
 	}
 
 	for _, a := range attrs {
@@ -219,13 +229,13 @@ func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *In
 				}
 			}
 			if nonzero {
-				ifi.HardwareAddr = a.Value[:]
+				i.HwAddr = a.Value[:]
 			}
 		case syscall.IFLA_IFNAME:
-			ifi.Name = string(a.Value[:len(a.Value)-1])
+			i.Name = string(a.Value[:len(a.Value)-1])
 		case syscall.IFLA_MTU:
-			ifi.MTU = int(*(*uint32)(unsafe.Pointer(&a.Value[:4][0])))
+			i.MTU = int(*(*uint32)(unsafe.Pointer(&a.Value[:4][0])))
 		}
 	}
-	return &ifi
+	return &i
 }
