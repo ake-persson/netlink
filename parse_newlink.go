@@ -94,7 +94,7 @@ type Interface struct {
 	Index        int            `json:"index"`
 	MTU          int            `json:"mtu"`
 	Name         string         `json:"name"`
-	HwAddr       HwAddr         `json:"hwAddr"`
+	HwAddr       HwAddr         `json:"hwAddr,omitempty"`
 	Flags        Flags          `json:"flags"`
 	NetInterface *net.Interface `json:"-"`
 }
