@@ -1,5 +1,3 @@
-# netlink
-
 # Credits
 
 - Parse messages based on Go package [net](https://golang.org/src/net/interface_linux.go).

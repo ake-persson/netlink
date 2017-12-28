@@ -1,24 +1,19 @@
 NAME=netlink
 IMPORT=github.com/mickep76/$(NAME)
 
-all: test build
-
-build:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
-
-all: test readme
+all: format build readme
 
 format:
 	gofmt -w=true .
 
-test: format
+test:
 	golint -set_exit_status
-#       go vet .
+	go vet .
 #       go test
 
 readme:
-	cat README.header >README.md
-	godoc2md $(IMPORT) >>README.md
+	godoc2md $(IMPORT) >README.md
+	cat README.footer >>README.md
 
-build:
+build: test
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
