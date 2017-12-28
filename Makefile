@@ -12,7 +12,8 @@ test:
 #       go test
 
 readme:
-	godoc2md $(IMPORT) >README.md
+	cat README.header >README.md
+	godoc2md $(IMPORT) >>README.md
 	cat README.footer >>README.md
 
 build: test
