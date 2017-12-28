@@ -12,8 +12,8 @@ const (
 	// NetlinkRoute return socket descriptor.
 	NetlinkRoute = 0
 
-	// RtmgrpLink Rtnetlink multicast group.
-	RtmgrpLink = 0x1
+	// RtmGrpLink Rtnetlink multicast group.
+	RtmGrpLink = 0x1
 )
 
 // Conn provides an interface for connecting to netlink socket.

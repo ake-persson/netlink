@@ -1,7 +1,7 @@
 package netlink
 
 import (
-	//	"encoding/json"
+	"encoding/json"
 	"net"
 	"strings"
 	"syscall"
@@ -155,11 +155,10 @@ func (f Flags) Slice() []string {
 	return l
 }
 
-/*
+// MarshalJSON marshal flags into JSON.
 func (f Flags) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f.Slice())
 }
-*/
 
 func parseFlags(flags uint32) Flags {
 	var f Flags
@@ -258,11 +257,10 @@ func (a HwAddr) String() string {
 	return string(buf)
 }
 
-/*
+// MarshalJSON marshal hardware address into JSON.
 func (a HwAddr) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.String())
 }
-*/
 
 // ParseNewLink parse interface info message.
 func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *Interface {

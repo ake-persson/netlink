@@ -11,7 +11,7 @@ import (
 )
 
 func listen() error {
-	clnt, err := netlink.Dial(netlink.NETLINK_ROUTE, netlink.RTMGRP_LINK)
+	clnt, err := netlink.Dial(netlink.NetlinkRoute, netlink.RtmGrpLink)
 	if err != nil {
 		log.Fatal(err)
 	}

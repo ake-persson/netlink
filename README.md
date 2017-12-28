@@ -21,9 +21,11 @@
   * [func (c *Conn) Close() error](#Conn.Close)
   * [func (c *Conn) Receive() ([]syscall.NetlinkMessage, error)](#Conn.Receive)
 * [type Flags](#Flags)
+  * [func (f Flags) MarshalJSON() ([]byte, error)](#Flags.MarshalJSON)
   * [func (f Flags) Slice() []string](#Flags.Slice)
   * [func (f Flags) String() string](#Flags.String)
 * [type HwAddr](#HwAddr)
+  * [func (a HwAddr) MarshalJSON() ([]byte, error)](#HwAddr.MarshalJSON)
   * [func (a HwAddr) String() string](#HwAddr.String)
 * [type Interface](#Interface)
   * [func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *Interface](#ParseNewLink)
@@ -39,8 +41,8 @@ const (
     // NetlinkRoute return socket descriptor.
     NetlinkRoute = 0
 
-    // RtmgrpLink Rtnetlink multicast group.
-    RtmgrpLink = 0x1
+    // RtmGrpLink Rtnetlink multicast group.
+    RtmGrpLink = 0x1
 )
 ```
 
@@ -110,7 +112,7 @@ Receive messages from netlink socket.
 
 
 
-## <a name="Flags">type</a> [Flags](/src/target/parse_newlink.go?s=615:630#L34)
+## <a name="Flags">type</a> [Flags](/src/target/parse_newlink.go?s=612:627#L34)
 ``` go
 type Flags uint
 ```
@@ -186,7 +188,16 @@ const (
 
 
 
-### <a name="Flags.Slice">func</a> (Flags) [Slice](/src/target/parse_newlink.go?s=2962:2993#L148)
+### <a name="Flags.MarshalJSON">func</a> (Flags) [MarshalJSON](/src/target/parse_newlink.go?s=3153:3197#L159)
+``` go
+func (f Flags) MarshalJSON() ([]byte, error)
+```
+MarshalJSON marshal flags into JSON.
+
+
+
+
+### <a name="Flags.Slice">func</a> (Flags) [Slice](/src/target/parse_newlink.go?s=2959:2990#L148)
 ``` go
 func (f Flags) Slice() []string
 ```
@@ -195,7 +206,7 @@ Slice return a list of all flags.
 
 
 
-### <a name="Flags.String">func</a> (Flags) [String](/src/target/parse_newlink.go?s=2852:2882#L143)
+### <a name="Flags.String">func</a> (Flags) [String](/src/target/parse_newlink.go?s=2849:2879#L143)
 ``` go
 func (f Flags) String() string
 ```
@@ -204,7 +215,7 @@ String return a string of all flags.
 
 
 
-## <a name="HwAddr">type</a> [HwAddr](/src/target/parse_newlink.go?s=1991:2009#L118)
+## <a name="HwAddr">type</a> [HwAddr](/src/target/parse_newlink.go?s=1988:2006#L118)
 ``` go
 type HwAddr []byte
 ```
@@ -219,14 +230,23 @@ HwAddr hardware address type.
 
 
 
-### <a name="HwAddr.String">func</a> (HwAddr) [String](/src/target/parse_newlink.go?s=4593:4624#L246)
+### <a name="HwAddr.MarshalJSON">func</a> (HwAddr) [MarshalJSON](/src/target/parse_newlink.go?s=4943:4988#L261)
+``` go
+func (a HwAddr) MarshalJSON() ([]byte, error)
+```
+MarshalJSON marshal hardware address into JSON.
+
+
+
+
+### <a name="HwAddr.String">func</a> (HwAddr) [String](/src/target/parse_newlink.go?s=4624:4655#L245)
 ``` go
 func (a HwAddr) String() string
 ```
 
 
 
-## <a name="Interface">type</a> [Interface](/src/target/parse_newlink.go?s=2517:2810#L133)
+## <a name="Interface">type</a> [Interface](/src/target/parse_newlink.go?s=2514:2807#L133)
 ``` go
 type Interface struct {
     Index        int            `json:"index"`
@@ -245,7 +265,7 @@ Interface provides information about a network interface.
 
 
 
-### <a name="ParseNewLink">func</a> [ParseNewLink](/src/target/parse_newlink.go?s=4997:5084#L268)
+### <a name="ParseNewLink">func</a> [ParseNewLink](/src/target/parse_newlink.go?s=5073:5160#L266)
 ``` go
 func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *Interface
 ```
