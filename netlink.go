@@ -9,10 +9,14 @@ import (
 )
 
 const (
-	NETLINK_ROUTE = 0
-	RTMGRP_LINK   = 0x1
+	// NetlinkRoute return socket descriptor.
+	NetlinkRoute = 0
+
+	// RtmgrpLink Rtnetlink multicast group.
+	RtmgrpLink = 0x1
 )
 
+// Conn provides an interface for connecting to netlink socket.
 type Conn struct {
 	Family     int
 	Groups     uint32
@@ -21,6 +25,7 @@ type Conn struct {
 	Pid        uint32
 }
 
+// Dial netlink socket.
 func Dial(family int, groups uint32) (*Conn, error) {
 	fd, err := unix.Socket(
 		unix.AF_NETLINK,
@@ -38,6 +43,7 @@ func Dial(family int, groups uint32) (*Conn, error) {
 	}, nil
 }
 
+// Bind to netlink socket.
 func (c *Conn) Bind() error {
 	c.SocketAddr = &unix.SockaddrNetlink{
 		Family: unix.AF_NETLINK,
@@ -60,10 +66,12 @@ func (c *Conn) Bind() error {
 	return nil
 }
 
+// Close netlink socket.
 func (c *Conn) Close() error {
 	return unix.Close(c.FileDescr)
 }
 
+// Receive messages from netlink socket.
 func (c *Conn) Receive() ([]syscall.NetlinkMessage, error) {
 	b := make([]byte, os.Getpagesize())
 	for {

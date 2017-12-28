@@ -1,7 +1,7 @@
 package netlink
 
 import (
-	"encoding/json"
+	//	"encoding/json"
 	"net"
 	"strings"
 	"syscall"
@@ -9,48 +9,86 @@ import (
 )
 
 const (
-	IFF_UP          = 0x1     // interface is up (administratively)
-	IFF_BROADCAST   = 0x2     // broadcast address valid
-	IFF_DEBUG       = 0x4     // turn on debugging
-	IFF_LOOPBACK    = 0x8     // is a loopback net
-	IFF_POINTOPOINT = 0x10    // interface is has p-p link
-	IFF_NOTRAILERS  = 0x20    // avoid use of trailers
-	IFF_RUNNING     = 0x40    // interface RFC2863 OPER_UP
-	IFF_NOARP       = 0x80    // no ARP protocol
-	IFF_PROMISC     = 0x100   // receive all packets
-	IFF_ALLMULTI    = 0x200   // receive all multicast packets
-	IFF_MASTER      = 0x400   // master of a load balancer
-	IFF_SLAVE       = 0x800   // slave of a load balancer
-	IFF_MULTICAST   = 0x1000  // Supports multicast
-	IFF_PORTSEL     = 0x2000  // can set media type
-	IFF_AUTOMEDIA   = 0x4000  // auto media select active
-	IFF_DYNAMIC     = 0x8000  // dialup device with changing addresses
-	IFF_LOWER_UP    = 0x10000 // driver signals L1 up
-	IFF_DORMANT     = 0x20000 // driver signals dormant
-	IFF_ECHO        = 0x40000 // echo sent packets
+	iffUp           = 0x1
+	iffBroadcast    = 0x2
+	iffDebug        = 0x4
+	iffLoopback     = 0x8
+	iffPointToPoint = 0x10
+	iffNoTrailers   = 0x20
+	iffRunning      = 0x40
+	iffNoArp        = 0x80
+	iffPromisc      = 0x100
+	iffAllMulti     = 0x200
+	iffMaster       = 0x400
+	iffSlave        = 0x800
+	iffMulticast    = 0x1000
+	iffPortSel      = 0x2000
+	iffAutoMedia    = 0x4000
+	iffDynamic      = 0x8000
+	iffLowerUp      = 0x10000
+	iffDormant      = 0x20000
+	iffEcho         = 0x40000
 )
 
+// Flags type for network interface state.
 type Flags uint
 
 const (
+	// FlagUp interface is up (administratively).
 	FlagUp Flags = 1 << iota
+
+	// FlagBroadcast broadcast address valid.
 	FlagBroadcast
+
+	// FlagDebug turn on debugging.
 	FlagDebug
+
+	// FlagLoopback is a loopback net.
 	FlagLoopback
+
+	// FlagPointToPoint interface is has p-p link.
 	FlagPointToPoint
+
+	// FlagNoTrailers avoid use of trailers.
 	FlagNoTrailers
+
+	// FlagRunning interface RFC2863 OPER_UP.
 	FlagRunning
+
+	// FlagNoArp no ARP protocol.
 	FlagNoArp
+
+	// FlagPromisc receive all packets.
 	FlagPromisc
+
+	// FlagAllMulti receive all multicast packets.
 	FlagAllMulti
+
+	// FlagMaster master of a load balancer.
 	FlagMaster
+
+	// FlagSlave slave of a load balancer.
 	FlagSlave
+
+	// FlagMulticast supports multicast.
 	FlagMulticast
+
+	// FlagPortSel can set media type.
 	FlagPortSel
+
+	// FlagAutoMedia auto media select active.
 	FlagAutoMedia
+
+	// FlagDynamic dialup device with changing addresses.
 	FlagDynamic
+
+	// FlagLowerUp driver signals L1 up.
 	FlagLowerUp
+
+	// FlagDormant driver signals dormant.
 	FlagDormant
+
+	// FlagEcho echo sent packets.
 	FlagEcho
 )
 
@@ -76,6 +114,7 @@ var flagNames = []string{
 	"echo",
 }
 
+// HwAddr hardware address type.
 type HwAddr []byte
 
 const hexDigit = "0123456789abcdef"
@@ -83,13 +122,14 @@ const hexDigit = "0123456789abcdef"
 const (
 	// See linux/if_arp.h.
 	// Note that Linux doesn't support IPv4 over IPv6 tunneling.
-	sysARPHardwareIPv4IPv4 = 768 // IPv4 over IPv4 tunneling
-	sysARPHardwareIPv6IPv6 = 769 // IPv6 over IPv6 tunneling
-	sysARPHardwareIPv6IPv4 = 776 // IPv6 over IPv4 tunneling
-	sysARPHardwareGREIPv4  = 778 // any over GRE over IPv4 tunneling
-	sysARPHardwareGREIPv6  = 823 // any over GRE over IPv6 tunneling
+	sysARPHardwareIPv4IPv4 = 768 // IPv4 over IPv4 tunneling.
+	sysARPHardwareIPv6IPv6 = 769 // IPv6 over IPv6 tunneling.
+	sysARPHardwareIPv6IPv4 = 776 // IPv6 over IPv4 tunneling.
+	sysARPHardwareGREIPv4  = 778 // Any over GRE over IPv4 tunneling.
+	sysARPHardwareGREIPv6  = 823 // Any over GRE over IPv6 tunneling.
 )
 
+// Interface provides information about a network interface.
 type Interface struct {
 	Index        int            `json:"index"`
 	MTU          int            `json:"mtu"`
@@ -99,10 +139,12 @@ type Interface struct {
 	NetInterface *net.Interface `json:"-"`
 }
 
+// String return a string of all flags.
 func (f Flags) String() string {
 	return strings.Join(f.Slice(), "|")
 }
 
+// Slice return a list of all flags.
 func (f Flags) Slice() []string {
 	var l []string
 	for i, name := range flagNames {
@@ -113,67 +155,69 @@ func (f Flags) Slice() []string {
 	return l
 }
 
+/*
 func (f Flags) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f.Slice())
 }
+*/
 
 func parseFlags(flags uint32) Flags {
 	var f Flags
-	if flags&IFF_UP != 0 {
+	if flags&iffUp != 0 {
 		f |= FlagUp
 	}
-	if flags&IFF_BROADCAST != 0 {
+	if flags&iffBroadcast != 0 {
 		f |= FlagBroadcast
 	}
-	if flags&IFF_DEBUG != 0 {
+	if flags&iffDebug != 0 {
 		f |= FlagDebug
 	}
-	if flags&IFF_LOOPBACK != 0 {
+	if flags&iffLoopback != 0 {
 		f |= FlagLoopback
 	}
-	if flags&IFF_POINTOPOINT != 0 {
+	if flags&iffPointToPoint != 0 {
 		f |= FlagPointToPoint
 	}
-	if flags&IFF_NOTRAILERS != 0 {
+	if flags&iffNoTrailers != 0 {
 		f |= FlagNoTrailers
 	}
-	if flags&IFF_RUNNING != 0 {
+	if flags&iffRunning != 0 {
 		f |= FlagRunning
 	}
-	if flags&IFF_NOARP != 0 {
+	if flags&iffNoArp != 0 {
 		f |= FlagNoArp
 	}
-	if flags&IFF_PROMISC != 0 {
+	if flags&iffPromisc != 0 {
 		f |= FlagPromisc
 	}
-	if flags&IFF_ALLMULTI != 0 {
+	if flags&iffAllMulti != 0 {
 		f |= FlagAllMulti
 	}
-	if flags&IFF_MASTER != 0 {
+	if flags&iffMaster != 0 {
 		f |= FlagMaster
 	}
-	if flags&IFF_SLAVE != 0 {
+	if flags&iffSlave != 0 {
 		f |= FlagSlave
 	}
-	if flags&IFF_MULTICAST != 0 {
+	if flags&iffMulticast != 0 {
 		f |= FlagMulticast
 	}
-	if flags&IFF_PORTSEL != 0 {
+	if flags&iffPortSel != 0 {
 		f |= FlagPortSel
 	}
-	if flags&IFF_AUTOMEDIA != 0 {
+	if flags&iffAutoMedia != 0 {
 		f |= FlagAutoMedia
 	}
-	if flags&IFF_DYNAMIC != 0 {
+	if flags&iffDynamic != 0 {
 		f |= FlagDynamic
 	}
-	if flags&IFF_LOWER_UP != 0 {
+	if flags&iffLowerUp != 0 {
 		f |= FlagLowerUp
 	}
-	if flags&IFF_DORMANT != 0 {
+	if flags&iffDormant != 0 {
 		f |= FlagDormant
 	}
-	if flags&IFF_ECHO != 0 {
+	if flags&iffEcho != 0 {
 		f |= FlagEcho
 	}
 	return f
@@ -181,19 +225,19 @@ func parseFlags(flags uint32) Flags {
 
 func parseNetFlags(rawFlags uint32) net.Flags {
 	var f net.Flags
-	if rawFlags&IFF_UP != 0 {
+	if rawFlags&iffUp != 0 {
 		f |= net.FlagUp
 	}
-	if rawFlags&IFF_BROADCAST != 0 {
+	if rawFlags&iffBroadcast != 0 {
 		f |= net.FlagBroadcast
 	}
-	if rawFlags&IFF_LOOPBACK != 0 {
+	if rawFlags&iffLoopback != 0 {
 		f |= net.FlagLoopback
 	}
-	if rawFlags&IFF_POINTOPOINT != 0 {
+	if rawFlags&iffPointToPoint != 0 {
 		f |= net.FlagPointToPoint
 	}
-	if rawFlags&IFF_MULTICAST != 0 {
+	if rawFlags&iffMulticast != 0 {
 		f |= net.FlagMulticast
 	}
 	return f
@@ -214,10 +258,13 @@ func (a HwAddr) String() string {
 	return string(buf)
 }
 
+/*
 func (a HwAddr) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.String())
 }
+*/
 
+// ParseNewLink parse interface info message.
 func ParseNewLink(ifim *syscall.IfInfomsg, attrs []syscall.NetlinkRouteAttr) *Interface {
 	i := Interface{
 		Index:        int(ifim.Index),

@@ -6,6 +6,7 @@ import (
 	"unsafe"
 )
 
+// Interfaces connect using rtnetlink and retrieve all network interfaces.
 func Interfaces() ([]Interface, error) {
 	tab, err := syscall.NetlinkRIB(syscall.RTM_GETLINK, syscall.AF_UNSPEC)
 	if err != nil {
